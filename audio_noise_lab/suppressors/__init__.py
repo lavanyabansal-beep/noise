@@ -16,6 +16,8 @@ from .noisereduce_wrapper import (
 )
 from .deep_model import deep_denoise, get_deep_model_status
 from .rnnoise import rnnoise_suppress, is_rnnoise_available, get_rnnoise_status
+from .silero_ns import silero_suppress, is_silero_available
+from .nsnet2 import nsnet2_suppress, is_nsnet2_available
 
 # Registry of all available suppressors
 SUPPRESSORS = {
@@ -79,6 +81,18 @@ SUPPRESSORS = {
         "description": "Real-time RNN-based noise suppression",
         "category": "deep_learning",
     },
+    "silero": {
+        "name": "Silero NS",
+        "func": silero_suppress,
+        "description": "Silero noise suppression (or scipy fallback)",
+        "category": "deep_learning",
+    },
+    "nsnet2": {
+        "name": "NSNet2",
+        "func": nsnet2_suppress,
+        "description": "NSNet2 noise suppression (or scipy fallback)",
+        "category": "deep_learning",
+    },
 }
 
 __all__ = [
@@ -96,5 +110,9 @@ __all__ = [
     "rnnoise_suppress",
     "is_rnnoise_available",
     "get_rnnoise_status",
+    "silero_suppress",
+    "is_silero_available",
+    "nsnet2_suppress",
+    "is_nsnet2_available",
     "SUPPRESSORS",
 ]

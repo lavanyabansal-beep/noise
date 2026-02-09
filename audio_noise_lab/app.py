@@ -194,6 +194,36 @@ def get_available_suppressors() -> Dict[str, dict]:
         "install_hint": rnnoise_hint,
         "is_fallback": rnnoise_fallback and not rnnoise_native,
     }
+
+    # Silero availability
+    try:
+        from suppressors.silero_ns import is_silero_available
+        silero_avail = is_silero_available(include_fallback=True)
+    except Exception:
+        silero_avail = False
+
+    suppressors["silero"] = {
+        "name": "Silero NS",
+        "description": "Silero noise suppression (or scipy fallback)",
+        "available": silero_avail,
+        "category": "Deep Learning",
+        "install_hint": "pip install git+https://github.com/snakers4/silero-models",
+    }
+
+    # NSNet2 availability
+    try:
+        from suppressors.nsnet2 import is_nsnet2_available
+        nsnet2_avail = is_nsnet2_available(include_fallback=True)
+    except Exception:
+        nsnet2_avail = False
+
+    suppressors["nsnet2"] = {
+        "name": "NSNet2",
+        "description": "NSNet2 noise suppression (or scipy fallback)",
+        "available": nsnet2_avail,
+        "category": "Deep Learning",
+        "install_hint": "pip install nsnet2",
+    }
     
     return suppressors
 
@@ -255,6 +285,16 @@ def run_suppressor(
                 success=False,
                 error_message=f"Unknown suppressor: {suppressor_key}",
             )
+
+        # Handle Silero and NSNet2 wrappers
+        if suppressor_key == "silero":
+            from suppressors.silero_ns import silero_suppress, is_silero_available
+            use_fb = not is_silero_available()
+            func = lambda audio, sr: silero_suppress(audio, sr, use_fallback=use_fb)
+        elif suppressor_key == "nsnet2":
+            from suppressors.nsnet2 import nsnet2_suppress, is_nsnet2_available
+            use_fb = not is_nsnet2_available()
+            func = lambda audio, sr: nsnet2_suppress(audio, sr, use_fallback=use_fb)
         
         # Make a copy to ensure no modification of original
         audio_copy = audio.copy()
@@ -724,6 +764,29 @@ def render_main_content(
                 suppressor_info = get_available_suppressors().get(key, {})
                 st.markdown(f"**{suppressor_info.get('name', key)}**")
                 st.markdown(descriptions[key])
+
+        # Add descriptions for Silero and NSNet2 if selected
+        if "silero" in selected_suppressors:
+            st.markdown(f"**Silero NS**")
+            st.markdown(
+                """
+                **Silero NS** provides lightweight neural noise suppression
+                models (community-maintained). When a Silero implementation
+                is not installed, the app falls back to a scipy-based spectral
+                gating method for basic noise reduction.
+                """
+            )
+
+        if "nsnet2" in selected_suppressors:
+            st.markdown(f"**NSNet2**")
+            st.markdown(
+                """
+                **NSNet2** is a modern low-latency noise suppression model.
+                If NSNet2 is not installed, the app uses a scipy-based
+                spectral gating fallback to provide a similar evaluation
+                experience without external dependencies.
+                """
+            )
 
 
 def main():
